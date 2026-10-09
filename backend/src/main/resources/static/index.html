@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VectorDB Explorer — Java Vector Search Platform</title>
+    <meta name="description" content="VectorDB Explorer: High-performance Java in-memory vector database and similarity search platform featuring Brute Force k-NN.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header & Live Stats Bar -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo-group">
+                    <div class="logo-icon">⚡</div>
+                    <div>
+                        <h1 class="app-title">VectorDB Explorer</h1>
+                        <span class="app-subtitle">Java Vector Search Platform • Phase 1 Core</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="connection-status" id="connection-status">
+                    <span class="status-dot pulsing" id="status-dot"></span>
+                    <span id="status-text">Connecting to Java Backend...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Metric Grid -->
+        <section class="stats-grid" id="stats-grid">
+            <div class="stat-card" id="card-stat-vectors">
+                <div class="stat-icon">🗄️</div>
+                <div class="stat-content">
+                    <div class="stat-label">Stored Vectors</div>
+                    <div class="stat-value" id="stat-total-vectors">--</div>
+                    <div class="stat-sub">In-Memory Index</div>
+                </div>
+            </div>
+
+            <div class="stat-card" id="card-stat-dims">
+                <div class="stat-icon">📐</div>
+                <div class="stat-content">
+                    <div class="stat-label">Vector Dimension</div>
+                    <div class="stat-value" id="stat-dimensions">--</div>
+                    <div class="stat-sub">Fixed Float32 Space</div>
+                </div>
+            </div>
+
+            <div class="stat-card" id="card-stat-algo">
+                <div class="stat-icon">⚙️</div>
+                <div class="stat-content">
+                    <div class="stat-label">Search Algorithm</div>
+                    <div class="stat-value" id="stat-algorithm">Brute Force</div>
+                    <div class="stat-sub">Exact Top-K Heap (PriorityQueue)</div>
+                </div>
+            </div>
+
+            <div class="stat-card" id="card-stat-metrics">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-content">
+                    <div class="stat-label">Supported Metrics</div>
+                    <div class="stat-value small-text" id="stat-metrics">Cosine • Euclidean • Manhattan</div>
+                    <div class="stat-sub">Strategy Pattern</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace: Split Columns -->
+        <main class="main-layout">
+            <!-- Left Column: Search & Add Panels -->
+            <section class="panel-column left-column">
+                
+                <!-- Search Query Card -->
+                <div class="glass-card" id="search-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="card-title-icon">🔍</span>
+                            <h2>Similarity Search</h2>
+                        </div>
+                        <span class="badge badge-accent">Top-K Query</span>
+                    </div>
+
+                    <!-- Query Preset Shortcuts -->
+                    <div class="preset-section">
+                        <label class="section-label">Demo Cluster Presets (1-Click Fill):</label>
+                        <div class="preset-buttons" id="preset-buttons">
+                            <button type="button" class="btn-preset" id="preset-cs" data-cluster="cs">
+                                💻 Computer Science
+                            </button>
+                            <button type="button" class="btn-preset" id="preset-math" data-cluster="math">
+                                📐 Mathematics
+                            </button>
+                            <button type="button" class="btn-preset" id="preset-food" data-cluster="food">
+                                🍕 Food & Cuisine
+                            </button>
+                            <button type="button" class="btn-preset" id="preset-sports" data-cluster="sports">
+                                🏀 Sports
+                            </button>
+                            <button type="button" class="btn-preset btn-preset-ghost" id="preset-random" data-cluster="random">
+                                🎲 Random 16D
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Query Vector Input -->
+                    <div class="form-group">
+                        <div class="label-with-meta">
+                            <label for="search-query-vector">Query Vector Values (16 floats separated by commas):</label>
+                            <span class="dim-counter" id="query-dim-count">16 / 16 dims</span>
+                        </div>
+                        <textarea id="search-query-vector" rows="3" class="code-input" placeholder="e.g. 0.90, 0.85, 0.72, 0.68, 0.12, 0.08, 0.15, 0.10, 0.05, 0.08, 0.06, 0.09, 0.07, 0.11, 0.08, 0.06"></textarea>
+                    </div>
+
+                    <!-- Parameters: Metric & Top-K -->
+                    <div class="controls-row">
+                        <div class="form-group flex-1">
+                            <label for="search-metric">Distance / Similarity Metric:</label>
+                            <select id="search-metric" class="select-input">
+                                <option value="cosine" selected>Cosine Similarity (Higher = Closer)</option>
+                                <option value="euclidean">Euclidean Distance (Lower = Closer)</option>
+                                <option value="manhattan">Manhattan Distance (Lower = Closer)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group flex-1">
+                            <div class="label-with-meta">
+                                <label for="search-k-slider">Top-K Results:</label>
+                                <span class="k-value-pill" id="k-value-pill">5</span>
+                            </div>
+                            <div class="slider-wrapper">
+                                <input type="range" id="search-k-slider" min="1" max="20" value="5" class="slider-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btn-search" class="btn-primary">
+                        <span class="btn-icon">⚡</span>
+                        <span>Execute Search</span>
+                    </button>
+                </div>
+
+                <!-- Add Vector Card -->
+                <div class="glass-card" id="add-vector-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="card-title-icon">➕</span>
+                            <h2>Add Vector to Database</h2>
+                        </div>
+                    </div>
+
+                    <form id="form-add-vector" onsubmit="return false;">
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="add-id">Vector ID (Unique):</label>
+                                <input type="text" id="add-id" class="text-input" placeholder="e.g. custom-algo-1" required>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="add-category">Category / Tag:</label>
+                                <input type="text" id="add-category" class="text-input" placeholder="e.g. cs, math, food, sports">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="add-metadata">Metadata / Description:</label>
+                            <input type="text" id="add-metadata" class="text-input" placeholder="e.g. Red-Black Tree self-balancing binary search tree">
+                        </div>
+
+                        <div class="form-group">
+                            <div class="label-with-meta">
+                                <label for="add-values">Vector Values (16 floats):</label>
+                                <button type="button" class="btn-link" id="btn-generate-random-vector">🎲 Auto-generate 16D</button>
+                            </div>
+                            <textarea id="add-values" rows="2" class="code-input" placeholder="e.g. 0.85, 0.80, 0.75, ... (16 values)" required></textarea>
+                        </div>
+
+                        <button type="submit" id="btn-add-vector" class="btn-secondary">
+                            <span>Store Vector in DB</span>
+                        </button>
+                    </form>
+                </div>
+
+            </section>
+
+            <!-- Right Column: Results & Vector Store Table -->
+            <section class="panel-column right-column">
+                
+                <!-- Search Results Panel -->
+                <div class="glass-card" id="results-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="card-title-icon">🏆</span>
+                            <h2>Search Results</h2>
+                        </div>
+                        <div class="results-metadata" id="results-meta">
+                            <span class="meta-pill" id="meta-latency">⏱️ -- µs</span>
+                            <span class="meta-pill" id="meta-metric">Metric: --</span>
+                            <span class="meta-pill" id="meta-algo">Algo: BruteForce</span>
+                        </div>
+                    </div>
+
+                    <!-- Search Result Items Container -->
+                    <div class="results-list" id="search-results-list">
+                        <div class="empty-state" id="results-empty-state">
+                            <div class="empty-icon">🎯</div>
+                            <h3>No search executed yet</h3>
+                            <p>Pick a preset above or enter a query vector, then click <b>Execute Search</b>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stored Vectors Corpus Browser -->
+                <div class="glass-card" id="corpus-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="card-title-icon">📚</span>
+                            <h2>Database Corpus (<span id="corpus-count">0</span> vectors)</h2>
+                        </div>
+                        <div class="corpus-actions">
+                            <input type="text" id="corpus-filter" class="search-filter-input" placeholder="Filter vectors...">
+                            <button type="button" id="btn-refresh-corpus" class="btn-icon-ghost" title="Refresh Corpus">🔄</button>
+                        </div>
+                    </div>
+
+                    <div class="corpus-table-container">
+                        <table class="corpus-table" id="corpus-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category</th>
+                                    <th>Metadata Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpus-table-body">
+                                <tr>
+                                    <td colspan="4" class="text-center">Loading vectors...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+
+        <!-- Toast Notifications Container -->
+        <div class="toast-container" id="toast-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
