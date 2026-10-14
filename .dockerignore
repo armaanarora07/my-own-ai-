@@ -1,0 +1,23 @@
+# Version control & editor
+.git
+.gitignore
+.vscode
+
+# Project documentation & standalone frontend source
+README.md
+frontend/
+
+# Backend source and build scripts (not needed by JRE runtime container)
+backend/src/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/pom.xml
+
+# Backend compiler intermediates and test reports (keep target/*.jar)
+backend/target/classes/
+backend/target/generated-sources/
+backend/target/generated-test-sources/
+backend/target/maven-status/
+backend/target/surefire-reports/
+backend/target/test-classes/
